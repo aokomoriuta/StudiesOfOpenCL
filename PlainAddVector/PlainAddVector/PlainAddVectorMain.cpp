@@ -56,7 +56,7 @@ namespace PlainAddVector
 		const string entryPoint = "AddVector";
 
 		// ベクトルの要素数
-		unsigned long elementCount = 1024*32;
+		cl_ulong elementCount = 1024*128;
 
 /*****************/
 		// ワークグループ内のワークアイテム数は256
@@ -152,7 +152,7 @@ namespace PlainAddVector
 		cl::Buffer bufferInputB = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(cl_float) * globalWorkitemCount);
 
 		// 出力のバッファーを書きこみ専用で作成
-		cl::Buffer bufferOutput = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(cl_float) * globalWorkitemCount);
+		cl::Buffer bufferOutput = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_float) * globalWorkitemCount);
 
 		// 要素数バッファーを読み込み専用で作成
 		cl::Buffer bufferElementCount = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(unsigned long));

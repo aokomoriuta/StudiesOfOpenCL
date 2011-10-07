@@ -1,6 +1,6 @@
 ﻿__kernel void AddVector(
-	__constant float* left,
-	__constant float* right,
+	__global const float* left,
+	__global const float* right,
 	__global float* output,
 	__constant ulong* count)
 {
