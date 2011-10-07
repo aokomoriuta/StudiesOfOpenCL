@@ -56,7 +56,7 @@ namespace PlainAddVector
 		const string entryPoint = "AddVector";
 
 		// ベクトルの要素数
-		unsigned long elementCount = 1024*16;
+		unsigned long elementCount = 1024*32;
 
 /*****************/
 		// ワークグループ内のワークアイテム数は256
@@ -248,8 +248,14 @@ namespace PlainAddVector
 /*****************/
 		cout << "# カーネルの実行" << endl;
 
+		// カーネル実行のイベント
+		cl::Event kernelEvent;
+
 		// カーネルを実行
-		queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(globalWorkitemCount), cl::NDRange(localWorkitemCount));
+		queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(globalWorkitemCount), cl::NDRange(localWorkitemCount), NULL, &kernelEvent);
+
+		// 実行終了まで待機
+		kernelEvent.wait();
 
 /*****************/
 		cout << "# デバイスからデータを読み込み" << endl;
