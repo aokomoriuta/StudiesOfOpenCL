@@ -56,11 +56,11 @@ namespace PlainAddVector
 		const string entryPoint = "AddVector";
 
 		// ベクトルの要素数
-		cl_ulong elementCount = 1024*128;
+		size_t elementCount = 544;
 
 /*****************/
-		// ワークグループ内のワークアイテム数は256
-		size_t localWorkitemCount = 256;
+		// ワークグループ内のワークアイテム数は512
+		size_t localWorkitemCount = 512;
 
 		// 全ワークアイテム数を計算
 		size_t globalWorkitemCount = (elementCount % localWorkitemCount == 0) ?
@@ -154,9 +154,6 @@ namespace PlainAddVector
 		// 出力のバッファーを書きこみ専用で作成
 		cl::Buffer bufferOutput = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_float) * globalWorkitemCount);
 
-		// 要素数バッファーを読み込み専用で作成
-		cl::Buffer bufferElementCount = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(unsigned long));
-
 
 /*****************/
 		cout << "# ソースの読み込み" << endl;
@@ -202,13 +199,17 @@ namespace PlainAddVector
 			// コンテキスト内の全てのデバイスを対象にしてプログラムをビルド
 			program.build(devices);
 		}
+		// OpenCL例外があった場合
 		catch(cl::Error error)
 		{
+			// ビルドエラーなら
 			if(error.err() == CL_BUILD_PROGRAM_FAILURE)
 			{
+				// ビルドログを表示
 				cout << program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device);
 			}
 
+			// エラーをそのまま投げる
 			throw error;
 		}
 
@@ -230,7 +231,7 @@ namespace PlainAddVector
 		kernel.setArg(2, bufferOutput);
 
 		// 要素数の引数を設定
-		kernel.setArg(3, bufferElementCount);
+		kernel.setArg(3, elementCount);
 
 /*****************/
 		cout << endl
@@ -240,10 +241,6 @@ namespace PlainAddVector
 		// 非同期で入力値を書き込み
 		queue.enqueueWriteBuffer(bufferInputA, CL_FALSE, 0, sizeof(cl_float) * globalWorkitemCount, inputA);
 		queue.enqueueWriteBuffer(bufferInputB, CL_FALSE, 0, sizeof(cl_float) * globalWorkitemCount, inputB);
-
-
-		// 非同期で要素数を書き込み
-		queue.enqueueWriteBuffer(bufferElementCount, CL_FALSE, 0, sizeof(unsigned long), &elementCount);
 
 /*****************/
 		cout << "# カーネルの実行" << endl;

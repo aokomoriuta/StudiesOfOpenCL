@@ -2,11 +2,11 @@
 	__global const float* left,
 	__global const float* right,
 	__global float* output,
-	__constant ulong* count)
+	int count)
 {
 	size_t i = get_global_id(0);
 
-	if(i > *count)
+	if(i > count)
 	{
 		return;
 	}
