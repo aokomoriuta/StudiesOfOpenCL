@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PlainAddVector", "PlainAddVector\PlainAddVector.vcxproj", "{64704A93-12F7-416E-994D-3EF181384C1B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenCLArrayGreaterThan", "OpenCLArrayGreaterThan\OpenCLArrayGreaterThan.vcxproj", "{64704A93-12F7-416E-994D-3EF181384C1B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

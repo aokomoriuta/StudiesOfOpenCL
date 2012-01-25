@@ -1,10 +1,10 @@
 ﻿#pragma warning( disable : 4290 )
 
-#include "PlainAddVectorMain.hpp"
+#include "OpenCLArrayGreaterThanMain.hpp"
 
 //! エントリーポイント
 int main()
 {
 	// アプリケーションの実行
-	return PlainAddVector::PlainAddVectorMain::Main();
+	return ArrayGreaterThan::ArrayGreaterThanMain::Main();
 }

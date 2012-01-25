@@ -4,11 +4,11 @@
 // OpenCL関連の例外を有効化
 #define __CL_ENABLE_EXCEPTIONS
 
-//! PlainAddVectorに関する名前空間
-namespace PlainAddVector
+//! ArrayGreaterThanに関する名前空間
+namespace ArrayGreaterThan
 {
 	//! アプリケーション本体
-	class PlainAddVectorMain
+	class ArrayGreaterThanMain
 	{
 	public:
 		//! アプリケーションを実行する

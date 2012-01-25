@@ -1,14 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <None Include="AddVector.cl" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="PlainAddVectorMain.cpp">
+    <ClCompile Include="Exception.cpp">
       <Filter>ソース</Filter>
     </ClCompile>
-    <ClCompile Include="Exception.cpp">
+    <ClCompile Include="OpenCLArrayGreaterThanMain.cpp">
       <Filter>ソース</Filter>
     </ClCompile>
   </ItemGroup>
@@ -21,11 +18,14 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PlainAddVectorMain.hpp">
-      <Filter>ヘッダー</Filter>
-    </ClInclude>
     <ClInclude Include="Exception.hpp">
       <Filter>ヘッダー</Filter>
     </ClInclude>
+    <ClInclude Include="OpenCLArrayGreaterThanMain.hpp">
+      <Filter>ヘッダー</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ArrayGreaterThan.cl" />
   </ItemGroup>
 </Project>

@@ -13,19 +13,19 @@
   <ItemGroup>
     <ClCompile Include="Exception.cpp" />
     <ClCompile Include="Main.cpp" />
-    <ClCompile Include="PlainAddVectorMain.cpp" />
+    <ClCompile Include="OpenCLArrayGreaterThanMain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Exception.hpp" />
-    <ClInclude Include="PlainAddVectorMain.hpp" />
+    <ClInclude Include="OpenCLArrayGreaterThanMain.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="AddVector.cl" />
+    <None Include="ArrayGreaterThan.cl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{64704A93-12F7-416E-994D-3EF181384C1B}</ProjectGuid>
     <RootNamespace>GpuedDem</RootNamespace>
-    <ProjectName>PlainAddVector</ProjectName>
+    <ProjectName>OpenCLArrayGreaterThan</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

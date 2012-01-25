@@ -1,4 +1,4 @@
-﻿#include "PlainAddVectorMain.hpp"
+﻿#include "OpenCLArrayGreaterThanMain.hpp"
 
 #include <iostream>
 #include <vector>
@@ -16,15 +16,15 @@ using std::endl;
 using std::vector;
 using std::string;
 
-namespace PlainAddVector
+namespace ArrayGreaterThan
 {
 	//! アプリケーションを実行する
-	int PlainAddVectorMain::Main()
+	int ArrayGreaterThanMain::Main()
 	{
 		try
 		{
 			// 計算を実行
-			PlainAddVectorMain::Compute();
+			ArrayGreaterThanMain::Compute();
 		}
 		catch(cl::Error error)
 		{
@@ -44,26 +44,33 @@ namespace PlainAddVector
 	}
 
 	//! 計算する
-	void PlainAddVectorMain::Compute()
+	void ArrayGreaterThanMain::Compute()
 	{
 		// 実行開始
-		cout << "= ベクトル加算テスト =" << endl;
+		cout << "= しきい値テスト =" << endl;
 
 		// OpenCL Cソースファイル名
-		const string filepath = "AddVector.cl";
+		const string filepath = "ArrayGreaterThan.cl";
 
 		// エントリポイント名
-		const string entryPoint = "AddVector";
+		const string entryPoint = "ArrayGreaterThan";
 
 		// ベクトルの要素数
-		size_t elementCount = 544;
+		const cl_uint elementCount = 600;
+
+		// 最大値と最小値
+		const cl_float minValue = -100;
+		const cl_float maxValue = +100;
+
+		// しきい値
+		const cl_float threshold = 99;
 
 /*****************/
 		// ワークグループ内のワークアイテム数は512
-		size_t localWorkitemCount = 512;
+		const cl_uint localWorkitemCount = 512;
 
 		// 全ワークアイテム数を計算
-		size_t globalWorkitemCount = (elementCount % localWorkitemCount == 0) ?
+		const cl_uint globalWorkitemCount = (elementCount % localWorkitemCount == 0) ?
 			elementCount : elementCount + localWorkitemCount - elementCount % localWorkitemCount;
 
 		// 要素数などを表示
@@ -79,31 +86,58 @@ namespace PlainAddVector
 
 /*****************/
 		cout << endl
-			 << "== 初期化処理 == "<< endl
-			 << "# ベクトルの初期化" << endl;
+			 << "== 入力値処理 == "<< endl
+			 << "# 入力配列の初期化" << endl;
 
 		// 入力値を初期化
-		cl_float* inputA = new cl_float[globalWorkitemCount]; 
-		cl_float* inputB = new cl_float[globalWorkitemCount]; 
+		cl_float* input = new cl_float[elementCount]; 
 
 		// 乱数生成器の作成
 		boost::variate_generator<boost::minstd_rand&, boost::uniform_real<cl_float>> random(
 			boost::minstd_rand(42),
-			boost::uniform_real<cl_float>(-100, 100));
+			boost::uniform_real<cl_float>(minValue, maxValue));
 
 		// 全要素について
-		for(unsigned long i = 0; i < elementCount; i++)
+		for(cl_uint i = 0; i < elementCount; i++)
 		{
 			// 入力値をランダムで与える
-			inputA[i] = random();
-			inputB[i] = random();
+			input[i] = random();
 		}
 
+		// 出力要素数
+		cl_uint countCL  = 0;
+		cl_uint countCPU = 0;
+
 		// OpenCL用出力
-		cl_float* outputCL = new cl_float[globalWorkitemCount];
+		cl_int* outputCL = new cl_int[elementCount];
 
 		// CPU用出力
-		cl_float* outputCPU = new cl_float[elementCount];
+		cl_int* outputCPU = new cl_int[elementCount];
+
+		// 全要素について
+		for(cl_uint i = 0; i < elementCount; i++)
+		{
+			// 出力値を-1で初期化
+			outputCL[i]  = -1;
+			outputCPU[i] = -1;
+		}
+
+
+		cout << "# CPUの計算" << endl;
+
+		// 全要素について
+		for(cl_uint i = 0; i < elementCount; i++)
+		{
+			// 大きければ
+			if(input[i] > threshold)
+			{
+				// 出力値に要素番号を追加
+				outputCPU[countCPU] = i;
+
+				// 要素数を増やす
+				countCPU++;
+			}
+		}
 
 	
 /*****************/
@@ -127,8 +161,6 @@ namespace PlainAddVector
 		// 先頭のデバイスを取得
 		cl::Device device = devices[0];
 
-		size_t maxSize = device.getInfo<CL_DEVICE_MAX_PARAMETER_SIZE>();
-
 
 /*****************/
 		cout << "# コンテキストを作成" << endl;
@@ -141,18 +173,18 @@ namespace PlainAddVector
 		cout << "# コマンドキューを作成" << endl;
 		
 		// コマンドキューを作成
-		cl::CommandQueue queue = cl::CommandQueue(context, device); 
+		cl::CommandQueue queue = cl::CommandQueue(context, device);
 
 
 /*****************/
 		cout << "# バッファーの作成" << endl;
 
 		// 入力のバッファーを読み込み専用で作成
-		cl::Buffer bufferInputA = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(cl_float) * globalWorkitemCount);
-		cl::Buffer bufferInputB = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(cl_float) * globalWorkitemCount);
+		cl::Buffer bufferInput = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(cl_float) * elementCount);
 
 		// 出力のバッファーを書きこみ専用で作成
-		cl::Buffer bufferOutput = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_float) * globalWorkitemCount);
+		cl::Buffer bufferOutput = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_int) * elementCount);
+		cl::Buffer bufferOutputCount = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_uint));
 
 
 /*****************/
@@ -223,15 +255,17 @@ namespace PlainAddVector
 /*****************/
 		cout << "# 引数を設定" << endl;
 
-		// 入力値の引数を設定
-		kernel.setArg(0, bufferInputA);
-		kernel.setArg(1, bufferInputB);
-
-		// 出力値の引数を設定
-		kernel.setArg(2, bufferOutput);
-
-		// 要素数の引数を設定
-		kernel.setArg(3, elementCount);
+		// 引数を設定
+		// # 入力配列
+		// # 入力数
+		// # しきい値
+		// # 出力配列
+		// # 出力数
+		kernel.setArg(0, bufferInput);
+		kernel.setArg(1, elementCount);
+		kernel.setArg(2, threshold);
+		kernel.setArg(3, bufferOutput);
+		kernel.setArg(4, bufferOutputCount);
 
 /*****************/
 		cout << endl
@@ -239,8 +273,7 @@ namespace PlainAddVector
 		     << "# デバイスにデータを書き込み" << endl;
 
 		// 非同期で入力値を書き込み
-		queue.enqueueWriteBuffer(bufferInputA, CL_FALSE, 0, sizeof(cl_float) * globalWorkitemCount, inputA);
-		queue.enqueueWriteBuffer(bufferInputB, CL_FALSE, 0, sizeof(cl_float) * globalWorkitemCount, inputB);
+		queue.enqueueWriteBuffer(bufferInput, CL_FALSE, 0, sizeof(cl_float) * elementCount, input);
 
 /*****************/
 		cout << "# カーネルの実行" << endl;
@@ -257,41 +290,42 @@ namespace PlainAddVector
 /*****************/
 		cout << "# デバイスからデータを読み込み" << endl;
 
+		// 出力待機イベント
+		vector<cl::Event> readEvents(2);
+
 		// 同期で出力値に読み込み
-		queue.enqueueReadBuffer(bufferOutput, CL_TRUE, 0, sizeof(cl_float) * globalWorkitemCount, outputCL);
+		queue.enqueueReadBuffer(bufferOutput, CL_FALSE, 0, sizeof(cl_int) * elementCount, outputCL, NULL, &(readEvents[0]));
+		queue.enqueueReadBuffer(bufferOutputCount, CL_FALSE, 0, sizeof(cl_uint), &countCL, NULL, &(readEvents[1]));
+
+		// 読み込み完了まで待機
+		cl::Event::waitForEvents(readEvents);
 
 /*****************/
 		cout << endl
-			 << "== 結果の比較 == " << endl
-			 << "# CPUで計算" << endl;
+			 << "== 結果 == " << endl
+			 << "# CLでの計算" << endl;
 
-		// 全要素について
-		for(unsigned long i = 0; i < elementCount; i++)
+		// 全出力値について
+		for(cl_uint i = 0; i < countCL; i++)
 		{
-			// CPUで足し算を計算
-			outputCPU[i] = inputA[i] + inputB[i];
+			// 計算結果を表示
+			cout << "*  " << outputCL[i] << "(" << input[outputCL[i]]  << ")" << endl;
 		}
 
 
-		cout << "# 誤差を評価" << endl;
 
-		// 誤差
-		double error = 0;
+		cout << "# CPUでの計算" << endl;
 
-		// 全要素について
-		for(unsigned long i = 0; i < elementCount; i++)
+		// 全出力値について
+		for(cl_uint i = 0; i < countCPU; i++)
 		{
-			// 誤差を加える
-			error += abs(outputCPU[i] - outputCL[i]);
+			// 計算結果を表示
+			cout << "*  " << outputCPU[i]  << "(" << input[outputCPU[i]]  << ")" << endl;
 		}
 
-		// 誤差を表示
-		cout << ";誤差" << endl
-			 << ": " << error / elementCount << endl;
 
 /*****************/
-		delete[] inputA;
-		delete[] inputB;
+		delete[] input;
 		delete[] outputCPU;
 		delete[] outputCL;
 	}
