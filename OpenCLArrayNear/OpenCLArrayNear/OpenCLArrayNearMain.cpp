@@ -57,37 +57,24 @@ namespace ArrayNear
 		const string entryPoint = "ArrayNear";
 
 		// ベクトルの要素数
-		const cl_uint elementCount = UINT_MAX/1000;
+		const cl_uint elementCount = 10000;
+		const cl_uint maxNearCount = 10;
 
 		// 最大値と最小値
-		const cl_float minValue = -1000;
-		const cl_float maxValue = +1000;
+		const cl_float minValue = -10000;
+		const cl_float maxValue = +10000;
 
 		// しきい値
-		const cl_float threshold = 999.99f;
+		const cl_float threshold = 0.0001f;
 
 /*****************/
-		// ワークグループ内のワークアイテム数は512
-		const cl_uint localWorkitemCount = 512;
-
-		// 全ワークアイテム数を計算
-		const cl_uint globalWorkitemCount = (elementCount % localWorkitemCount == 0) ?
-			elementCount : elementCount + localWorkitemCount - elementCount % localWorkitemCount;
-
-		// 要素数などを表示
+		// 要素数を表示
 		cout << ";要素数" << endl
-			 << ": " << elementCount << endl
- 			 << ";ワークグループ数" << endl
-			 << ": " << (globalWorkitemCount % localWorkitemCount + globalWorkitemCount/localWorkitemCount) << endl
-			 << ";全ワークアイテム数" << endl
-			 << ": " << globalWorkitemCount << endl
-			 << ";ワークグループ内ワークアイテム数" << endl
-			 << ": " << localWorkitemCount  << endl;
+			 << ": " << elementCount << endl;
 		
 
 /*****************/
 		cout << endl
-			 << "== 入力値処理 == "<< endl
 			 << "# 入力配列の初期化" << endl;
 
 		// 入力値を初期化
@@ -105,46 +92,63 @@ namespace ArrayNear
 			input[i] = random();
 		}
 
-		// 出力要素数
-		cl_uint countCL  = 0;
-		cl_uint countCPU = 0;
-
 		// OpenCL用出力
-		cl_int* outputCL = new cl_int[elementCount];
+		cl_int* outputCL = new cl_int[elementCount * maxNearCount];
 
 		// CPU用出力
-		cl_int* outputCPU = new cl_int[elementCount];
-
-		// 全要素について
-		for(cl_uint i = 0; i < elementCount; i++)
-		{
-			// 出力値を-1で初期化
-			outputCL[i]  = -1;
-			outputCPU[i] = -1;
-		}
+		cl_int* outputCPU = new cl_int[elementCount * maxNearCount];
 
 		// タイマーで時間測定
 		boost::timer timer = boost::timer();
 
 
+/*****************/
 		cout << "# CPUの計算";
 		timer.restart();
+		
+		// 全要素について
+		for(cl_uint i = 0; i < elementCount; i++)
+		{
+			// 全近傍について
+			for(cl_uint j = 0; j < maxNearCount; j++)
+			{
+				// 出力値を-1で初期化
+				outputCPU[i*maxNearCount + j] = -1;
+			}
+		}
 
 		// 全要素について
 		for(cl_uint i = 0; i < elementCount; i++)
 		{
-			// 大きければ
-			if(input[i] > threshold)
-			{
-				// 出力値に要素番号を追加
-				outputCPU[countCPU] = i;
+			// この要素の近傍要素数を初期化
+			cl_uint nearCount = 0;
 
-				// 要素数を増やす
-				countCPU++;
+			// 他の要素に対して
+			for(cl_uint j = 0; j < elementCount; j++)
+			{
+				// 自分以外に対して
+				if(i != j)
+				{
+					// 相手との差が小さければ
+					if(abs(input[i] - input[j]) < threshold)
+					{
+						// 出力値に要素番号を追加
+						outputCPU[i*maxNearCount + nearCount] = j;
+
+						// 近傍要素数を増やす
+						nearCount++;
+
+						// 近傍要素数が最大値に達したら
+						if(nearCount > maxNearCount)
+						{
+							// 例外
+							throw "近傍要素数の最大値に達しました";
+						}
+					}
+				}
 			}
 		}
 		cout << " - " << timer.elapsed() << "[s]" << endl;
-
 	
 /*****************/
 		cout << "# プラットフォームを取得" << endl;
@@ -189,8 +193,7 @@ namespace ArrayNear
 		cl::Buffer bufferInput = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(cl_float) * elementCount);
 
 		// 出力のバッファーを書きこみ専用で作成
-		cl::Buffer bufferOutput = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_int) * elementCount);
-		cl::Buffer bufferOutputCount = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_uint));
+		cl::Buffer bufferOutput = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_int) * elementCount*maxNearCount);
 
 
 /*****************/
@@ -262,16 +265,16 @@ namespace ArrayNear
 		cout << "# 引数を設定" << endl;
 
 		// 引数を設定
+		// # 入力配列の要素数
+		// # 近傍要素数の最大値
 		// # 入力配列
-		// # 入力数
-		// # しきい値
 		// # 出力配列
-		// # 出力数
-		kernel.setArg(0, bufferInput);
-		kernel.setArg(1, elementCount);
-		kernel.setArg(2, threshold);
+		// # しきい値
+		kernel.setArg(0, elementCount);
+		kernel.setArg(1, maxNearCount);
+		kernel.setArg(2, bufferInput);
 		kernel.setArg(3, bufferOutput);
-		kernel.setArg(4, bufferOutputCount);
+		kernel.setArg(4, threshold);
 
 /*****************/
 		cout << endl
@@ -289,7 +292,7 @@ namespace ArrayNear
 		cl::Event kernelEvent;
 
 		// カーネルを実行
-		queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(globalWorkitemCount), cl::NDRange(localWorkitemCount), NULL, &kernelEvent);
+		queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(elementCount, elementCount), cl::NullRange, NULL, &kernelEvent);
 
 		// 実行終了まで待機
 		kernelEvent.wait();
@@ -298,14 +301,13 @@ namespace ArrayNear
 		cout << "# デバイスからデータを読み込み" << endl;
 
 		// 出力待機イベント
-		vector<cl::Event> readEvents(2);
+		cl::Event readEvent;
 
 		// 同期で出力値に読み込み
-		queue.enqueueReadBuffer(bufferOutput, CL_FALSE, 0, sizeof(cl_int) * elementCount, outputCL, NULL, &(readEvents[0]));
-		queue.enqueueReadBuffer(bufferOutputCount, CL_FALSE, 0, sizeof(cl_uint), &countCL, NULL, &(readEvents[1]));
+		queue.enqueueReadBuffer(bufferOutput, CL_FALSE, 0, sizeof(cl_int) * elementCount*maxNearCount, outputCL, NULL, &readEvent);
 
 		// 読み込み完了まで待機
-		cl::Event::waitForEvents(readEvents);
+		readEvent.wait();
 
 		cout << "#: " << timer.elapsed() << "[s]" << endl;
 
@@ -315,10 +317,17 @@ namespace ArrayNear
 			 << "# CLでの計算" << endl;
 
 		// 全出力値について
-		for(cl_uint i = 0; i < countCL; i++)
+		for(cl_uint i = 0; i < elementCount; i++)
 		{
-			// 計算結果を表示
-			cout << "*  " << outputCL[i] << "(" << input[outputCL[i]]  << ")" << endl;
+			for(cl_uint j = 0; j < maxNearCount; j++)
+			{
+				// 近傍が存在すれば
+				if(outputCL[i*maxNearCount + j] != -1)
+				{
+					// 計算結果を表示
+					cout << "* " << i << " : " << outputCL[i*maxNearCount + j] << " (" << input[i] << " : " << input[outputCL[i*maxNearCount + j]] << ")" << endl;
+				}
+			}
 		}
 
 
@@ -326,10 +335,17 @@ namespace ArrayNear
 		cout << "# CPUでの計算" << endl;
 
 		// 全出力値について
-		for(cl_uint i = 0; i < countCPU; i++)
+		for(cl_uint i = 0; i < elementCount; i++)
 		{
-			// 計算結果を表示
-			cout << "*  " << outputCPU[i]  << "(" << input[outputCPU[i]]  << ")" << endl;
+			for(cl_uint j = 0; j < maxNearCount; j++)
+			{
+				// 近傍が存在すれば
+				if(outputCPU[i*maxNearCount + j] != -1)
+				{
+					// 計算結果を表示
+					cout << "* " << i << " : " << outputCPU[i*maxNearCount + j] << " (" << input[i] << " : " << input[outputCPU[i*maxNearCount + j]] << ")" << endl;
+				}
+			}
 		}
 
 

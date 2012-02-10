@@ -1,61 +1,61 @@
 ﻿/* しきい値以上の番号の配列を返す */
 /*!
+	\param elementCount 入力配列の要素数
+	\param maxNearCount 近傍要素数の最大値
 	\param input 入力配列
-	\param inputCount 入力配列の要素数
-	\param threshold しきい値
 	\param output 出力配列
-	\param outputCount 出力配列の要素数
+	\param threshold しきい値
 */
 __kernel void ArrayNear(
+	const uint elementCount,
+	const uint maxNearCount,
 	__global const float* input,
-	const uint inputCount,
-	const float threshold,
 	__global int* output,
-	__global uint* outputCount)
+	const float threshold)
 {
 	/* グローバルIDを取得 */
-	ulong gi = get_global_id(0);
+	uint thisIndex = get_global_id(0);
+	uint otherIndex = get_global_id(1);
 
 	/* 入力要素数より大きいワークアイテム番号なら何もしない */
-	if(gi > inputCount)
+	if((thisIndex > elementCount) || (otherIndex > elementCount))
 	{
 		return;
 	}
 
-	/* 出力配列を-1で初期化 */
-	output[gi] = -1;
-
-	/* 出力要素数をゼロに初期化 */
-	if(gi == 0)
+	/* 最大近傍要素数以下なら */
+	if(otherIndex < maxNearCount)
 	{
-		*outputCount = 0;
+		/* 出力配列を-1で初期化 */
+		output[thisIndex*maxNearCount + otherIndex] = -1;
 	}
 
 	/* ここまで同期 */
 	barrier(CLK_GLOBAL_MEM_FENCE);
 
-
-	/* しきい値以上だったら */
-	if(input[gi] > threshold)
+	/* 相手が自分自身でなければ */
+	if(thisIndex != otherIndex)
 	{
-		/* 出力配列へ格納できたかどうか */
-		bool isCompleted = false;
-
-		/* 格納できるまで繰り返す */
-		for(int j = *outputCount; !isCompleted; j++)
+		/* しきい値以上だったら */
+		if(fabs(input[thisIndex] - input[otherIndex]) < threshold)
 		{
-			/* 入力要素数以上だったら */
-			if(j >= inputCount)
+			/* 出力配列へ格納できたかどうか */
+			bool isCompleted = false;
+
+			/* 格納できるまで繰り返す */
+			for(int i = 0; !isCompleted; i++)
 			{
-				/* ゼロに戻す */
-				j = 0;
+				/* 格納して、成功してたかどうか */
+				isCompleted = (atomic_cmpxchg(output + thisIndex*maxNearCount + i, -1, otherIndex) == -1);
+
+				/* 成功したら */
+				if(isCompleted)
+				{
+					/* ループ抜け */
+					break;
+				}
 			}
-
-			/* 格納して、成功してたかどうか */
-			isCompleted = (atomic_cmpxchg(output+j, -1, gi) == -1);
 		}
-
-		/* 出力要素数を増やす */
-		atomic_inc(outputCount);
 	}
+
 }
