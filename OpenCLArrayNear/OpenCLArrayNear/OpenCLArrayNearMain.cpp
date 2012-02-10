@@ -1,4 +1,4 @@
-﻿#include "OpenCLArrayGreaterThanMain.hpp"
+﻿#include "OpenCLArrayNearMain.hpp"
 
 #include <iostream>
 #include <vector>
@@ -8,6 +8,7 @@
 #include <cmath>
 #include <CL/cl.hpp>
 #include <boost/random.hpp>
+#include <boost/timer.hpp>
 
 #include "Exception.hpp"
 
@@ -16,15 +17,15 @@ using std::endl;
 using std::vector;
 using std::string;
 
-namespace ArrayGreaterThan
+namespace ArrayNear
 {
 	//! アプリケーションを実行する
-	int ArrayGreaterThanMain::Main()
+	int ArrayNearMain::Main()
 	{
 		try
 		{
 			// 計算を実行
-			ArrayGreaterThanMain::Compute();
+			ArrayNearMain::Compute();
 		}
 		catch(cl::Error error)
 		{
@@ -44,26 +45,26 @@ namespace ArrayGreaterThan
 	}
 
 	//! 計算する
-	void ArrayGreaterThanMain::Compute()
+	void ArrayNearMain::Compute()
 	{
 		// 実行開始
 		cout << "= しきい値テスト =" << endl;
 
 		// OpenCL Cソースファイル名
-		const string filepath = "ArrayGreaterThan.cl";
+		const string filepath = "ArrayNear.cl";
 
 		// エントリポイント名
-		const string entryPoint = "ArrayGreaterThan";
+		const string entryPoint = "ArrayNear";
 
 		// ベクトルの要素数
-		const cl_uint elementCount = 600;
+		const cl_uint elementCount = UINT_MAX/1000;
 
 		// 最大値と最小値
-		const cl_float minValue = -100;
-		const cl_float maxValue = +100;
+		const cl_float minValue = -1000;
+		const cl_float maxValue = +1000;
 
 		// しきい値
-		const cl_float threshold = 99;
+		const cl_float threshold = 999.99f;
 
 /*****************/
 		// ワークグループ内のワークアイテム数は512
@@ -81,7 +82,7 @@ namespace ArrayGreaterThan
 			 << ";全ワークアイテム数" << endl
 			 << ": " << globalWorkitemCount << endl
 			 << ";ワークグループ内ワークアイテム数" << endl
-			 << ": " << localWorkitemCount  << endl; 
+			 << ": " << localWorkitemCount  << endl;
 		
 
 /*****************/
@@ -122,8 +123,12 @@ namespace ArrayGreaterThan
 			outputCPU[i] = -1;
 		}
 
+		// タイマーで時間測定
+		boost::timer timer = boost::timer();
 
-		cout << "# CPUの計算" << endl;
+
+		cout << "# CPUの計算";
+		timer.restart();
 
 		// 全要素について
 		for(cl_uint i = 0; i < elementCount; i++)
@@ -138,6 +143,7 @@ namespace ArrayGreaterThan
 				countCPU++;
 			}
 		}
+		cout << " - " << timer.elapsed() << "[s]" << endl;
 
 	
 /*****************/
@@ -271,6 +277,7 @@ namespace ArrayGreaterThan
 		cout << endl
 			 << "== 計算の実行 ==" << endl
 		     << "# デバイスにデータを書き込み" << endl;
+		timer.restart();
 
 		// 非同期で入力値を書き込み
 		queue.enqueueWriteBuffer(bufferInput, CL_FALSE, 0, sizeof(cl_float) * elementCount, input);
@@ -299,6 +306,8 @@ namespace ArrayGreaterThan
 
 		// 読み込み完了まで待機
 		cl::Event::waitForEvents(readEvents);
+
+		cout << "#: " << timer.elapsed() << "[s]" << endl;
 
 /*****************/
 		cout << endl

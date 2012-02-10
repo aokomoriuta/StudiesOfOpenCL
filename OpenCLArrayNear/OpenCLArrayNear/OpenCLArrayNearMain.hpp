@@ -1,14 +1,14 @@
-﻿#ifndef PLAINADDVECTOR_PLAINADDVECTORMAIN_INCLUDED
-#define PLAINADDVECTOR_PLAINADDVECTORMAIN_INCLUDED
+﻿#ifndef ARRAYNEAR_ARRAYNEARMAIN_INCLUDED
+#define ARRAYNEAR_ARRAYNEARMAIN_INCLUDED
 
 // OpenCL関連の例外を有効化
 #define __CL_ENABLE_EXCEPTIONS
 
-//! ArrayGreaterThanに関する名前空間
-namespace ArrayGreaterThan
+//! ArrayNearに関する名前空間
+namespace ArrayNear
 {
 	//! アプリケーション本体
-	class ArrayGreaterThanMain
+	class ArrayNearMain
 	{
 	public:
 		//! アプリケーションを実行する

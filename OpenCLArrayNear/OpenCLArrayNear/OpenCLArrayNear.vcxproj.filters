@@ -5,7 +5,7 @@
     <ClCompile Include="Exception.cpp">
       <Filter>ソース</Filter>
     </ClCompile>
-    <ClCompile Include="OpenCLArrayGreaterThanMain.cpp">
+    <ClCompile Include="OpenCLArrayNearMain.cpp">
       <Filter>ソース</Filter>
     </ClCompile>
   </ItemGroup>
@@ -21,11 +21,11 @@
     <ClInclude Include="Exception.hpp">
       <Filter>ヘッダー</Filter>
     </ClInclude>
-    <ClInclude Include="OpenCLArrayGreaterThanMain.hpp">
+    <ClInclude Include="OpenCLArrayNearMain.hpp">
       <Filter>ヘッダー</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ArrayGreaterThan.cl" />
+    <None Include="ArrayNear.cl" />
   </ItemGroup>
 </Project>

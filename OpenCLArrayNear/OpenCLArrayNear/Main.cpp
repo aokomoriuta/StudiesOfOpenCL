@@ -1,10 +1,10 @@
 ﻿#pragma warning( disable : 4290 )
 
-#include "OpenCLArrayGreaterThanMain.hpp"
+#include "OpenCLArrayNearMain.hpp"
 
 //! エントリーポイント
 int main()
 {
 	// アプリケーションの実行
-	return ArrayGreaterThan::ArrayGreaterThanMain::Main();
+	return ArrayNear::ArrayNearMain::Main();
 }

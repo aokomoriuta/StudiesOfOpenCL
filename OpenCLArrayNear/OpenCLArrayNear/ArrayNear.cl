@@ -6,7 +6,7 @@
 	\param output 出力配列
 	\param outputCount 出力配列の要素数
 */
-__kernel void ArrayGreaterThan(
+__kernel void ArrayNear(
 	__global const float* input,
 	const uint inputCount,
 	const float threshold,
