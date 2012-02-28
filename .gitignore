@@ -8,3 +8,4 @@ ipch/
 *.vcxproj.user
 *.sdf
 *.opensdf
+*.BAK
