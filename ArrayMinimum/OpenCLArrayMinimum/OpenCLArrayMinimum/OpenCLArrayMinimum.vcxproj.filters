@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Exception.cpp">
+      <Filter>ソース</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenCLArrayMinimumMain.cpp">
+      <Filter>ソース</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="ソース">
+      <UniqueIdentifier>{37739bd6-7169-494b-852d-b10fea0b85cf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー">
+      <UniqueIdentifier>{1cb302cc-f7d3-4ad0-83e5-e71a942abe10}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Exception.hpp">
+      <Filter>ヘッダー</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenCLArrayMinimumMain.hpp">
+      <Filter>ヘッダー</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ArrayMinimum.cl" />
+  </ItemGroup>
+</Project>
