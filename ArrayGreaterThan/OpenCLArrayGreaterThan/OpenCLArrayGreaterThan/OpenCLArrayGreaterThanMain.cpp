@@ -196,26 +196,10 @@ namespace ArrayGreaterThan
 /*****************/
 		cout << "# ソースの読み込み" << endl;
 
-		// 入力ストリームの作成
-		std::ifstream sourceFileStream = std::ifstream(filepath);
-		
-		// ソースファイルの作成
-		std::stringstream sourceStringStream = std::stringstream();
-
-		// ファイルの終端まで
-		while(!sourceFileStream.eof())
-		{
-			// 一行読み込み
-			char buffer[1024];
-			sourceFileStream.getline(buffer, 1024);
-
-			// ソースファイルに追加
-			sourceStringStream << buffer;
-		}
-
-		// 先頭の不要な文字を除去
-		std::string sourceString = sourceStringStream.str();
-		sourceString = sourceString.substr(3);
+		// ソースを文字列に格納
+		std::string sourceString = std::string(
+			std::istreambuf_iterator<char>(std::ifstream(filepath)),
+			(std::istreambuf_iterator<char>())).substr(3);
 
 		// ソースの作成
 		cl::Program::Sources sources = cl::Program::Sources();
