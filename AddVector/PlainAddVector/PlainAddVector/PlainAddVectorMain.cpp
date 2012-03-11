@@ -60,7 +60,7 @@ namespace PlainAddVector
 
 /*****************/
 		// ワークグループ内のワークアイテム数は512
-		size_t localWorkitemCount = 512;
+		size_t localWorkitemCount = 256;
 
 		// 全ワークアイテム数を計算
 		size_t globalWorkitemCount = (elementCount % localWorkitemCount == 0) ?
@@ -83,13 +83,13 @@ namespace PlainAddVector
 			 << "# ベクトルの初期化" << endl;
 
 		// 入力値を初期化
-		cl_float* inputA = new cl_float[globalWorkitemCount]; 
-		cl_float* inputB = new cl_float[globalWorkitemCount]; 
+		cl_double* inputA = new cl_double[globalWorkitemCount]; 
+		cl_double* inputB = new cl_double[globalWorkitemCount]; 
 
 		// 乱数生成器の作成
-		boost::variate_generator<boost::minstd_rand&, boost::uniform_real<cl_float>> random(
+		boost::variate_generator<boost::minstd_rand&, boost::uniform_real<cl_double>> random(
 			boost::minstd_rand(42),
-			boost::uniform_real<cl_float>(-100, 100));
+			boost::uniform_real<cl_double>(-100, 100));
 
 		// 全要素について
 		for(unsigned long i = 0; i < elementCount; i++)
@@ -100,10 +100,10 @@ namespace PlainAddVector
 		}
 
 		// OpenCL用出力
-		cl_float* outputCL = new cl_float[globalWorkitemCount];
+		cl_double* outputCL = new cl_double[globalWorkitemCount];
 
 		// CPU用出力
-		cl_float* outputCPU = new cl_float[elementCount];
+		cl_double* outputCPU = new cl_double[elementCount];
 
 	
 /*****************/
@@ -148,11 +148,11 @@ namespace PlainAddVector
 		cout << "# バッファーの作成" << endl;
 
 		// 入力のバッファーを読み込み専用で作成
-		cl::Buffer bufferInputA = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(cl_float) * globalWorkitemCount);
-		cl::Buffer bufferInputB = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(cl_float) * globalWorkitemCount);
+		cl::Buffer bufferInputA = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(cl_double) * globalWorkitemCount);
+		cl::Buffer bufferInputB = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(cl_double) * globalWorkitemCount);
 
 		// 出力のバッファーを書きこみ専用で作成
-		cl::Buffer bufferOutput = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_float) * globalWorkitemCount);
+		cl::Buffer bufferOutput = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(cl_double) * globalWorkitemCount);
 
 
 /*****************/
@@ -222,8 +222,8 @@ namespace PlainAddVector
 		     << "# デバイスにデータを書き込み" << endl;
 
 		// 非同期で入力値を書き込み
-		queue.enqueueWriteBuffer(bufferInputA, CL_FALSE, 0, sizeof(cl_float) * globalWorkitemCount, inputA);
-		queue.enqueueWriteBuffer(bufferInputB, CL_FALSE, 0, sizeof(cl_float) * globalWorkitemCount, inputB);
+		queue.enqueueWriteBuffer(bufferInputA, CL_FALSE, 0, sizeof(cl_double) * globalWorkitemCount, inputA);
+		queue.enqueueWriteBuffer(bufferInputB, CL_FALSE, 0, sizeof(cl_double) * globalWorkitemCount, inputB);
 
 /*****************/
 		cout << "# カーネルの実行" << endl;
@@ -241,7 +241,7 @@ namespace PlainAddVector
 		cout << "# デバイスからデータを読み込み" << endl;
 
 		// 同期で出力値に読み込み
-		queue.enqueueReadBuffer(bufferOutput, CL_TRUE, 0, sizeof(cl_float) * globalWorkitemCount, outputCL);
+		queue.enqueueReadBuffer(bufferOutput, CL_TRUE, 0, sizeof(cl_double) * globalWorkitemCount, outputCL);
 
 /*****************/
 		cout << endl

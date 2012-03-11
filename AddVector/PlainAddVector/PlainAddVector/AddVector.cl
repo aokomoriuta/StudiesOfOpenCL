@@ -1,6 +1,8 @@
-﻿__kernel void AddVector(
-	__global const float* left,
-	__global const float* right,
+﻿#pragma OPENCL EXTENSION cl_khr_fp64: enable
+
+__kernel void AddVector(
+	__global const double* left,
+	__global const double* right,
 	__global float* output,
 	int count)
 {
