@@ -16,6 +16,9 @@ namespace Class
 	public:
 		//! 位置
 		cl_float4 x;
+
+		//! 速度
+		cl_float4 u;
 	};
 }
 #endif

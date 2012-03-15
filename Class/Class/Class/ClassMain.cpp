@@ -64,11 +64,8 @@ namespace Class
 		const cl_float minValue = -10;
 		const cl_float maxValue = +10;
 
-		// 移動量
-		cl_float4 dx;
-		dx.s[0] = 0.5f;
-		dx.s[1] = 1.5f;
-		dx.s[2] = 2.5f;
+		// 時間刻み
+		cl_float dt = 0.1f;
 
 /*****************/
 		// 粒子数を表示
@@ -97,15 +94,24 @@ namespace Class
 		// 全要素について
 		for(cl_uint i = 0; i < count; i++)
 		{
-			// 位置をランダムで与える
-			cl_float3 x;
-			x.s[0] = i;
-			x.s[1] = i+0.5f;
-			x.s[2] = i+0.25f;
+			// 位置と速度をランダムで与える
+			cl_float4 x;
+			x.s[0] = random();
+			x.s[1] = random();
+			x.s[2] = random();
+			x.s[3] = 0;
+			
+			cl_float4 u;
+			u.s[0] = random();
+			u.s[1] = random();
+			u.s[2] = random();
+			u.s[3] = 0;
 
-			// 位置を設定
+			// 位置を速度を設定
 			particlesCL [i].x = x;
 			particlesCPU[i].x = x;
+			particlesCL [i].u = u;
+			particlesCPU[i].u = u;
 		}
 
 		// タイマーで時間測定
@@ -120,9 +126,9 @@ namespace Class
 		for(cl_uint i = 0; i < count; i++)
 		{
 			// xyzそれぞれ加算する
-			particlesCPU[i].x.s[0] += dx.s[0];
-			particlesCPU[i].x.s[1] += dx.s[1];
-			particlesCPU[i].x.s[2] += dx.s[2];
+			particlesCPU[i].x.s[0] += particlesCPU[i].u.s[0] * dt;
+			particlesCPU[i].x.s[1] += particlesCPU[i].u.s[1] * dt;
+			particlesCPU[i].x.s[2] += particlesCPU[i].u.s[2] * dt;
 		}
 		cout << " - " << timer.elapsed() << "[s]" << endl;
 	
@@ -243,7 +249,7 @@ namespace Class
 		// # 移動量
 		kernel.setArg(0, count);
 		kernel.setArg(1, particlesBuffer);
-		kernel.setArg(2, dx);
+		kernel.setArg(2, dt);
 
 		// カーネルを実行
 		queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(count), cl::NullRange);
