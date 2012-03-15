@@ -11,14 +11,19 @@
 namespace Class
 {
 	//! 粒子クラス
+	#pragma pack(push, 4)
 	class Particle
 	{
 	public:
 		//! 位置
-		cl_float4 x;
+		cl_float4 X;
 
 		//! 速度
-		cl_float4 u;
+		cl_float4 U;
+
+		//! 質量
+		cl_float M;
 	};
+	#pragma pack(pop)
 }
 #endif

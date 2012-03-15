@@ -67,6 +67,13 @@ namespace Class
 		// 時間刻み
 		cl_float dt = 0.1f;
 
+		// 力
+		cl_float4 force;
+		force.s[0] = 0.1f;
+		force.s[1] = 0.2f;
+		force.s[2] = 0.3f;
+		force.s[3] = 0;
+
 /*****************/
 		// 粒子数を表示
 		cout << ";粒子数" << endl
@@ -100,18 +107,22 @@ namespace Class
 			x.s[1] = random();
 			x.s[2] = random();
 			x.s[3] = 0;
-			
 			cl_float4 u;
 			u.s[0] = random();
 			u.s[1] = random();
 			u.s[2] = random();
 			u.s[3] = 0;
 
+			//! 質量は固定
+			cl_float m = 5;
+
 			// 位置を速度を設定
-			particlesCL [i].x = x;
-			particlesCPU[i].x = x;
-			particlesCL [i].u = u;
-			particlesCPU[i].u = u;
+			particlesCL [i].X = x;
+			particlesCPU[i].X = x;
+			particlesCL [i].U = u;
+			particlesCPU[i].U = u;
+			particlesCL [i].M = m;
+			particlesCPU[i].M = m;
 		}
 
 		// タイマーで時間測定
@@ -125,10 +136,18 @@ namespace Class
 		// 全要素について
 		for(cl_uint i = 0; i < count; i++)
 		{
-			// xyzそれぞれ加算する
-			particlesCPU[i].x.s[0] += particlesCPU[i].u.s[0] * dt;
-			particlesCPU[i].x.s[1] += particlesCPU[i].u.s[1] * dt;
-			particlesCPU[i].x.s[2] += particlesCPU[i].u.s[2] * dt;
+			cl_float4 a;
+			a.s[0] = force.s[0]/particlesCPU[i].M;
+			a.s[1] = force.s[1]/particlesCPU[i].M;
+			a.s[2] = force.s[2]/particlesCPU[i].M;
+
+			// 位置と速度
+			particlesCPU[i].X.s[0] += particlesCPU[i].U.s[0] * dt + a.s[0] * dt * dt/2;
+			particlesCPU[i].X.s[1] += particlesCPU[i].U.s[1] * dt + a.s[1] * dt * dt/2;
+			particlesCPU[i].X.s[2] += particlesCPU[i].U.s[2] * dt + a.s[2] * dt * dt/2;
+			particlesCPU[i].U.s[0] += a.s[0] * dt;
+			particlesCPU[i].U.s[1] += a.s[1] * dt;
+			particlesCPU[i].U.s[2] += a.s[2] * dt;
 		}
 		cout << " - " << timer.elapsed() << "[s]" << endl;
 	
@@ -249,7 +268,8 @@ namespace Class
 		// # 移動量
 		kernel.setArg(0, count);
 		kernel.setArg(1, particlesBuffer);
-		kernel.setArg(2, dt);
+		kernel.setArg(2, force);
+		kernel.setArg(3, dt);
 
 		// カーネルを実行
 		queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(count), cl::NullRange);
@@ -267,8 +287,8 @@ namespace Class
 		for(int i = 0; i < count; i++)
 		{
 			// 位置を取得
-			cl_float3 xCL  = particlesCL [i].x;
-			cl_float3 xCPU = particlesCPU[i].x;
+			cl_float3 xCL  = particlesCL [i].X;
+			cl_float3 xCPU = particlesCPU[i].X;
 
 			// 位置が異なっていれば
 			if(xCL.s[0] != xCPU.s[0])
