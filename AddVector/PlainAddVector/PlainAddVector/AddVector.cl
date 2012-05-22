@@ -3,12 +3,12 @@
 __kernel void AddVector(
 	__global const double* left,
 	__global const double* right,
-	__global float* output,
+	__global double* output,
 	int count)
 {
 	size_t i = get_global_id(0);
 
-	if(i > count)
+	if(i >= count)
 	{
 		return;
 	}

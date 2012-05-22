@@ -89,7 +89,7 @@ namespace PlainAddVector
 		// 乱数生成器の作成
 		boost::variate_generator<boost::minstd_rand&, boost::uniform_real<cl_double>> random(
 			boost::minstd_rand(42),
-			boost::uniform_real<cl_double>(-100, 100));
+			boost::uniform_real<cl_double>(-0, 10));
 
 		// 全要素について
 		for(unsigned long i = 0; i < elementCount; i++)
