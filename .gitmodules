@@ -1,0 +1,3 @@
+[submodule "SimpleViennaCL/ViennaCLFiles"]
+	path = SimpleViennaCL/ViennaCLFiles
+	url = git@github.com:aokomoriuta/ViennaCLFiles.git
